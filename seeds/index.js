@@ -1,10 +1,13 @@
+process.env.NODE_ENV !== 'production' && require('dotenv').config()
 const mongoose = require('mongoose')
 const Campground = require('../models/campground')
 const cities = require('./cities')
+const defaultImages = require('./defaultImages')
 const { descriptors, places } = require('./seedHelpers')
-const { error } = require('console')
 
-mongoose.connect('mongodb://localhost:27017/yelp-camp')
+// connect to the database
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'
+mongoose.connect(dbUrl)
 // call mongoose.connection to check on connection status
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'connection error:'))
@@ -17,8 +20,9 @@ const random = (array) => array[Math.floor(Math.random() * array.length)]
 
 const seedDB = async () => {
 	await Campground.deleteMany({})
-	for (let i = 0; i < 300; i++) {
+	for (let i = 0; i < 20; i++) {
 		const randomCity = random(cities)
+		const defaultImage = random(defaultImages)
 		const campground = new Campground({
 			title: `${random(descriptors)} ${random(places)}`,
 			price: Math.floor(Math.random() * 20),
@@ -26,15 +30,15 @@ const seedDB = async () => {
 			location: `${randomCity.city}, ${randomCity.province_id}`,
 			images: [
 				{
-					url: 'https://res.cloudinary.com/damprmonl/image/upload/v1701045747/YelpCamp/oaq6lpkoqu596c6os7yf.jpg',
-					filename: 'YelpCamp/oaq6lpkoqu596c6os7yf',
+					url: defaultImage.url,
+					filename: defaultImage.public_id,
 				},
 			],
 			geometry: {
 				type: 'Point',
 				coordinates: [randomCity.lng, randomCity.lat],
 			},
-			author: '655568a9601a10b2a39fc819',
+			author: '65c055bc6e6629101d26fda7',
 		})
 		await campground.save()
 	}
